@@ -1,0 +1,140 @@
+---
+# tasks file for bootstrap
+
+- name: Import assert.yml
+  ansible.builtin.import_tasks:
+    file: assert.yml
+  run_once: true
+  delegate_to: localhost
+
+- name: Wait for port to be available
+  ansible.builtin.wait_for:
+    port: "{{ ansible_port | default('22') }}"
+    timeout: "{{ bootstrap_timeout }}"
+  become: false
+  when:
+    - ansible_connection is defined
+    - ansible_connection not in [ "container", "docker", "community.docker.docker" ]
+    - ansible_connection is not none
+    - bootstrap_wait_for_host
+
+- name: Prepare system
+  # At this stage, python and/or sudo are not installed, `become` can't be used.
+  become: false
+  block:
+    - name: Test connection
+      ansible.builtin.wait_for_connection:
+        timeout: "{{ bootstrap_timeout }}"
+      register: bootstrap_connect
+      changed_when: false
+    - name: Test sudo
+      ansible.builtin.command:
+        cmd: sudo --version
+      changed_when: false
+  rescue:
+    - name: Gather bootstrap facts
+      ansible.builtin.include_tasks:
+        file: gather_facts.yml
+
+    - name: Install bootstrap packages (raw)
+      ansible.builtin.raw: "{{ bootstrap_install.raw }}"
+      args:
+        executable: /bin/sh
+      register: bootstrap_install_packages
+      changed_when:
+        - >
+          (bootstrap_install.stdout_regex in bootstrap_install_packages.stdout
+          and bootstrap_os_family in [ "Alpine", "Archlinux", "Gentoo" ])
+          or
+          (bootstrap_install.stdout_regex not in bootstrap_install_packages.stdout
+          and bootstrap_os_family in [ "Debian", "RedHat", "Rocky", "Suse" ])
+
+- name: Gather ansible facts
+  ansible.builtin.setup:
+  become: false
+
+- name: Update package manager cache
+  block:
+    - name: Update APK package manager repositories (Alpine)
+      community.general.apk:
+        update_cache: true
+      when: ansible_os_family == "Alpine"
+
+    - name: Update PACMAN package manager repositories (Archlinux)
+      community.general.pacman:
+        update_cache: true
+      when: ansible_os_family == "Archlinux"
+
+    - name: Update APT package manager repositories (Debian)
+      ansible.builtin.apt:
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Check if Emerge package manager repositories need updating (Gentoo)
+      ansible.builtin.command:
+        cmd: emerge --sync --quiet
+      register: result
+      changed_when: "'Already up to date' not in result.stdout"
+      failed_when: "'Already up to date' not in result.stdout"
+      when: ansible_os_family == "Gentoo"
+
+    - name: Update YUM package manager repositories (RedHat)
+      ansible.builtin.yum:
+        update_cache: true
+      when: ansible_os_family == "RedHat"
+
+    - name: Update Zypper package manager repositories (Suse)
+      community.general.zypper:
+        name: refresh
+      when: ansible_os_family == "SUSE"
+
+    - name: Update YUM package manager repositories (Amazon)
+      ansible.builtin.yum:
+        update_cache: true
+      when: ansible_os_family == "Amazon"
+
+    - name: Update YUM package manager repositories (CentOS)
+      ansible.builtin.yum:
+        update_cache: true
+      when: ansible_os_family == "CentOS"
+
+    - name: Update DNF package manager repositories (Fedora)
+      ansible.builtin.dnf:
+        update_cache: true
+      when: ansible_os_family == "Fedora"
+
+    - name: Update PKG package manager repositories (FreeBSD)
+      ansible.builtin.command:
+        cmd: pkg update
+      register: result
+      changed_when: "'Updating FreeBSD repository catalogue' in result.stdout"
+      failed_when: "'Updating FreeBSD repository catalogue' not in result.stdout"
+      when: ansible_os_family == "FreeBSD"
+
+    - name: Check for outdated packages (OpenBSD)
+      ansible.builtin.command:
+        cmd: pkg_info -u
+      register: result
+      changed_when: result.stdout_lines | length > 0
+      failed_when: false
+      when: ansible_os_family == "OpenBSD"
+
+    - name: Update PKG_ADD package manager repositories (OpenBSD)
+      ansible.builtin.command:
+        cmd: pkg_add -Uu
+      register: result
+      changed_when: result.stdout != ""
+      failed_when: result.stdout != ""
+      when: ansible_os_family == "OpenBSD" and result.stdout_lines | length > 0
+
+    - name: Update Homebrew package manager repositories (Darwin)
+      community.general.homebrew:
+        update_homebrew: true
+      when: ansible_os_family == "Darwin"
+
+- name: Install bootstrap packages (package)
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ bootstrap_facts_packages.split() }}"
+  become: "{{ bootstrap_become }}"
