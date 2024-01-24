@@ -1,8 +1,8 @@
 # Ansible Role: `bootstrap`
 
-Prepare your system to be managed by Ansible.
+[![CI](https://github.com/shaneholloman/ansible-role-bootstrap/actions/workflows/ci.yml/badge.svg)](https://github.com/shaneholloman/ansible-role-bootstrap/actions/workflows/ci.yml)
 
-      <!-- BADGE_PLACEHOLDER -->
+Prepare your system to be managed by Ansible.
 
 ## Example Playbook
 
@@ -49,13 +49,6 @@ bootstrap_become: true
 ## Requirements
 
 - pip packages listed in [requirements.txt](https://github.com/shaneholloman/ansible-role-bootstrap/blob/main/requirements.txt).
-
-## Context
-
-This role is a part of many compatible roles. Have a look at [the documentation of these roles](https://shaneholloman.com/) for further information.
-
-Here is an overview of related roles:
-![dependencies](https://raw.githubusercontent.com/shaneholloman/ansible-role-bootstrap/png/requirements.png "Dependencies")
 
 ## Compatibility
 
