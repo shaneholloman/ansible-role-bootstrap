@@ -3,7 +3,7 @@ galaxy_info:
   author: shaneholloman
   role_name: bootstrap
   description: Prepare your system to be managed by Ansible.
-  license: Apache-2.0
+  license: "license (Unlicense)"
   company: none
   min_ansible_version: "2.12"
 
@@ -37,3 +37,4 @@ galaxy_info:
     - system
 
 dependencies: []
+

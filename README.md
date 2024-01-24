@@ -8,7 +8,7 @@ Prepare your system to be managed by Ansible.
 
 This example is taken from [`molecule/default/converge.yml`](https://github.com/shaneholloman/ansible-role-bootstrap/blob/main/molecule/default/converge.yml) and is tested on each push, pull request and release.
 
-```yaml
+```yml
 ---
 - name: Converge
   hosts: all
@@ -32,7 +32,7 @@ Also see a [full explanation and example](https://shaneholloman.com/how-to-use-t
 
 The default values for the variables are set in [`defaults/main.yml`](https://github.com/shaneholloman/ansible-role-bootstrap/blob/main/defaults/main.yml):
 
-```yaml
+```yml
 ---
 # defaults file for bootstrap
 
@@ -71,7 +71,7 @@ If you find issues, please register them in [GitHub](https://github.com/shanehol
 
 ## License
 
-MIT / BSD
+Unlicense
 
 ## Author Information
 
