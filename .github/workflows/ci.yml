@@ -7,14 +7,13 @@ name: CI
     branches:
       - main
   schedule:
-    - cron: "30 4 * * 1"
+    - cron: '30 4 * * 1'
 
 defaults:
   run:
     working-directory: 'shaneholloman.bootstrap'
 
 jobs:
-
   lint:
     name: Lint
     runs-on: ubuntu-latest
